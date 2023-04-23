@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Post, Put, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Post,
+  Put,
+  UseGuards,
+  UsePipes,
+} from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { CreateUserDto } from "../users/dto/create-user.dto";
 import { AuthService } from "./auth.service";
@@ -10,6 +18,7 @@ import {
 } from "./swagger.decorator";
 import { AuthUserDto } from "./dto/auth-user.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
+import { ValidationPipe } from "../pipes/validation.pipe";
 
 // TODO: get refreshToken from cookie
 
@@ -39,6 +48,7 @@ export class AuthController {
   }
 
   @SwaggerSignUp()
+  @UsePipes(ValidationPipe)
   @Post("/sign-up")
   signUp(@Body() userDto: CreateUserDto) {
     return this.authService.signUp(userDto);

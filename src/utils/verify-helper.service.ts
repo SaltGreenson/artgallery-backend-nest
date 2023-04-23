@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { CreatedUserDto } from "../auth/dto/created-user.dto";
 
@@ -11,7 +11,7 @@ export class VerifyHelper {
     const token = authHeader.split(" ")[1];
 
     if (bearer !== "Bearer" || !token) {
-      throw new Error();
+      throw new UnauthorizedException({ message: "Unauthorized" });
     }
 
     return this.jwtService.verify(token);

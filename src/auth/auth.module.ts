@@ -5,7 +5,7 @@ import { UsersModule } from "../users/users.module";
 import { JwtModule } from "@nestjs/jwt";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Auth, AuthSchema } from "./auth.shema";
-import { VerifyHelper } from "../helpers/verify-helper.service";
+import { VerifyHelper } from "../utils/verify-helper.service";
 
 @Module({
   imports: [

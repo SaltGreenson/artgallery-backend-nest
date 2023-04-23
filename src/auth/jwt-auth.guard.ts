@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Observable } from "rxjs";
-import { VerifyHelper } from "../helpers/verify-helper.service";
+import { VerifyHelper } from "../utils/verify-helper.service";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

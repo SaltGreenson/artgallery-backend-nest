@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { User } from "./user.schema";
-import { Model } from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { RolesService } from "../roles/roles.service";
 import { AddRoleDto } from "./dto/add-role.dto";
@@ -75,8 +75,8 @@ export class UsersService {
       throw new HttpException("Access denied", HttpStatus.FORBIDDEN);
     }
 
-    await user.$set("banned", true);
-    await user.$set("bannedReason", dto.banReason);
+    user.$set("banned", true);
+    user.$set("bannedReason", dto.banReason);
     return user.save();
   }
 
@@ -85,6 +85,79 @@ export class UsersService {
       path: "role",
       select: "value",
     });
+  }
+
+  async findLikedDislikedPosts(
+    type: "likedPosts" | "dislikedPosts",
+    userId: mongoose.Types.ObjectId,
+    galleryId: string
+  ): Promise<User> {
+    return this.userModel
+      .findOne({
+        _id: userId,
+        [type]: galleryId,
+      })
+      .select("_id");
+  }
+
+  async updateUser(
+    userId: mongoose.Types.ObjectId,
+    updateCriteria,
+    populatePath: "likedPosts" | "dislikedPosts"
+  ) {
+    return this.userModel
+      .findOneAndUpdate(
+        {
+          _id: userId,
+        },
+        { ...updateCriteria },
+        { new: true }
+      )
+      .select("_id name")
+      .populate({
+        path: populatePath,
+        select: "_id",
+      })
+      .lean();
+  }
+
+  async incrementPostsCount(userId: mongoose.Types.ObjectId): Promise<User> {
+    return this.userModel
+      .findOneAndUpdate(
+        { _id: userId },
+        { $inc: { postsCount: 1 } },
+        { new: true }
+      )
+      .select("postsCount")
+      .lean();
+  }
+
+  async decrementPostsCount(userId: mongoose.Types.ObjectId): Promise<User> {
+    const user: mongoose.Document<unknown, object, User> &
+      Omit<User & Required<{ _id: mongoose.Types.ObjectId }>, never> =
+      await this.userModel
+        .findOneAndUpdate(
+          { _id: userId },
+          { $inc: { postsCount: -1 } },
+          { new: true }
+        )
+        .select("postsCount likedPosts dislikedPosts")
+        .populate({
+          path: "likedPosts dislikedPosts",
+          select: "_id",
+        })
+        .lean();
+
+    if (!user) {
+      throw new HttpException(
+        "User not found",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+    user.$set("likedCount", user.likedPosts.length);
+    user.$set("dislikedCount", user.dislikedPosts.length);
+
+    return user.save();
   }
 
   async findAll(

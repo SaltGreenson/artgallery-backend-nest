@@ -8,6 +8,9 @@ export type GalleryDocument = HydratedDocument<Gallery>;
 
 @Schema()
 export class Gallery {
+  @ApiProperty({ example: "awdjalk12.pomlk.lk23" })
+  _id: mongoose.Types.ObjectId;
+
   @ApiProperty({
     example: "Gallery title",
   })

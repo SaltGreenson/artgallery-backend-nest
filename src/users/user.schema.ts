@@ -2,11 +2,16 @@ import mongoose, { HydratedDocument } from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Gallery } from "../galleries/gallery.schema";
 import { ApiProperty } from "@nestjs/swagger";
+import { Role } from "../roles/role.schema";
 
 export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 export class User {
+  @ApiProperty({ example: "jh3242kjadawl1kj23gv112we1" })
+  @Prop()
+  _id: string;
+
   @ApiProperty({ example: "Alex" })
   @Prop({ required: true })
   name: string;
@@ -53,6 +58,12 @@ export class User {
   })
   @Prop([{ type: mongoose.Schema.Types.ObjectId, ref: "Gallery" }])
   dislikedPosts: Gallery[];
+
+  @ApiProperty({
+    example: "ADMIN",
+  })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: "Role" })
+  role: Role;
 
   @ApiProperty({
     example: Date.now(),

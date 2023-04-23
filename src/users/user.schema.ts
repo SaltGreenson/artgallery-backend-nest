@@ -8,9 +8,8 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 export class User {
-  @ApiProperty({ example: "jh3242kjadawl1kj23gv112we1" })
-  @Prop()
-  _id: string;
+  @ApiProperty({ example: "awdjalk12.pomlk.lk23" })
+  _id: mongoose.Types.ObjectId;
 
   @ApiProperty({ example: "Alex" })
   @Prop({ required: true })
@@ -66,9 +65,20 @@ export class User {
   role: Role;
 
   @ApiProperty({
+    example: false,
+  })
+  @Prop({ default: false })
+  banned: boolean;
+
+  @ApiProperty({
+    example: "",
+  })
+  @Prop({ default: "" })
+  bannedReason: string;
+
+  @ApiProperty({
     example: Date.now(),
   })
-  @Prop({ default: Date.now() })
   createdAt: Date;
 }
 

@@ -1,29 +1,45 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Put, Query, UseGuards } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { User } from "./user.schema";
-import { RolesService } from "../roles/roles.service";
+import { ApiTags } from "@nestjs/swagger";
+import {
+  SwaggerBanUser,
+  SwaggerGetAllUsers,
+  SwaggerSetUserRole,
+} from "./swagger.decorator";
+import { Roles } from "../auth/role-auth.decorator";
+import { RolesGuard } from "../auth/roles-auth.guard";
+import { AddRoleDto } from "./dto/add-role.dto";
+import { BanUserDto } from "./dto/ban-user.dto";
 
 @ApiTags("Users")
 @Controller("/api/users")
 export class UsersController {
-  constructor(
-    private usersService: UsersService,
-    private rolesService: RolesService
-  ) {}
+  constructor(private usersService: UsersService) {}
 
-  @ApiOperation({ summary: "Create user" })
-  @ApiResponse({ status: 200, type: User })
-  @Post("/sign-up")
-  create(@Body() userDto: CreateUserDto) {
-    return this.usersService.create(userDto);
+  @SwaggerGetAllUsers()
+  @Roles("ADMIN", "MODERATOR")
+  @UseGuards(RolesGuard)
+  @Get()
+  findAll(
+    @Query("searchString") searchString = "",
+    @Query("skip") skip = 0,
+    @Query("limit") limit = 10
+  ) {
+    return this.usersService.findAll(searchString, skip, limit);
+  }
+  @SwaggerSetUserRole()
+  @Roles("ADMIN")
+  @UseGuards(RolesGuard)
+  @Put("/add-role")
+  async addRole(@Body() dto: AddRoleDto) {
+    return this.usersService.addRole(dto);
   }
 
-  @ApiOperation({ summary: "Get all users" })
-  @ApiResponse({ status: 200, type: [User] })
-  @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @SwaggerBanUser()
+  @Roles("ADMIN", "MODERATOR")
+  @UseGuards(RolesGuard)
+  @Put("/ban")
+  async ban(@Body() dto: BanUserDto) {
+    return this.usersService.ban(dto);
   }
 }

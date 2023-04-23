@@ -9,11 +9,11 @@ config();
   const PORT = process.env.PORT || 3000;
 
   const app = await NestFactory.create(AppModule);
+
   const config = new DocumentBuilder()
-    .setTitle("Art Gallery")
+    .setTitle("BREENKY")
     .setDescription("REST API")
     .setVersion("1.0.0")
-    .addTag("Breenky")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

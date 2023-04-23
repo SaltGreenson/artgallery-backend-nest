@@ -44,9 +44,9 @@ export class AuthService {
       throw new UnauthorizedException({ message: "Unauthorized" });
     }
 
-    const token = (
-      await this.authModel.findOne({ refreshToken: userData.refreshToken })
-    ).refreshToken;
+    const token = await this.authModel.findOne({
+      user: userData._id,
+    });
 
     if (!token) {
       throw new UnauthorizedException({ message: "Unauthorized" });
@@ -106,12 +106,18 @@ export class AuthService {
   private async validateUser(userDto: AuthUserDto) {
     const user = await this.usersService.getUserByEmailOrName(userDto.email);
 
+    if (!user) {
+      throw new UnauthorizedException({
+        message: "Incorrect email or password",
+      });
+    }
+
     const passwordIsEqual = await bcrypt.compare(
       userDto.password,
       user.password
     );
 
-    if (user && passwordIsEqual) {
+    if (passwordIsEqual) {
       return user;
     }
 

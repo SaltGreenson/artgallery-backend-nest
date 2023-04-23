@@ -2,13 +2,24 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { config } from "dotenv";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from "@nestjs/platform-fastify";
+import fastifyCookie from "@fastify/cookie";
 
 config();
 
 (async function start() {
   const PORT = process.env.PORT || 3000;
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter()
+  );
+  await app.register(fastifyCookie, {
+    secret: process.env.COOKIE_SECRET || "SECRET",
+  });
 
   const config = new DocumentBuilder()
     .setTitle("BREENKY")

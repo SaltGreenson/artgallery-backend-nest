@@ -4,7 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import { UsersModule } from "./users/users.module";
 import { RolesModule } from "./roles/roles.module";
 import { AuthModule } from "./auth/auth.module";
-import { PhotosModule } from "./photos/photos.module";
+import { GalleriesModule } from "./galleries/galleries.module";
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { PhotosModule } from "./photos/photos.module";
     UsersModule,
     RolesModule,
     AuthModule,
-    PhotosModule,
+    GalleriesModule,
   ],
   controllers: [],
   providers: [],

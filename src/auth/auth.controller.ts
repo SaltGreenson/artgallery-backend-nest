@@ -4,6 +4,8 @@ import {
   Delete,
   Post,
   Put,
+  Req,
+  Res,
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
@@ -19,38 +21,64 @@ import {
 import { AuthUserDto } from "./dto/auth-user.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 import { ValidationPipe } from "../pipes/validation.pipe";
-
-// TODO: get refreshToken from cookie
+import { FastifyRequest, FastifyReply } from "fastify";
 
 @ApiTags("Auth")
-@Controller("auth")
+@Controller("/api/auth")
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @SwaggerLogIn()
   @Post("/log-in")
-  async login(@Body() userDto: AuthUserDto) {
-    return this.authService.login(userDto);
+  async login(@Body() userDto: AuthUserDto, @Res() res: FastifyReply) {
+    const user = await this.authService.login(userDto);
+    this.setCookie(res, user.accessToken, user.refreshToken);
+    return res.send(user);
   }
 
   @SwaggerLogout()
   @UseGuards(JwtAuthGuard)
   @Delete("/logout")
-  async logout() {
-    return this.authService.logout("");
+  async logout(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const { refreshToken } = req.cookies;
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+    return res.send(this.authService.logout(refreshToken));
   }
 
   @SwaggerRefresh()
   @UseGuards(JwtAuthGuard)
   @Put("/refresh")
-  async refresh() {
-    return this.authService.refresh("");
+  async refresh(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+    const { refreshToken } = req.cookies;
+    const user = await this.authService.refresh(refreshToken);
+    this.setCookie(res, user.accessToken, user.refreshToken);
+    return res.send(user);
   }
 
   @SwaggerSignUp()
   @UsePipes(ValidationPipe)
   @Post("/sign-up")
-  signUp(@Body() userDto: CreateUserDto) {
-    return this.authService.signUp(userDto);
+  async signUp(@Body() userDto: CreateUserDto, @Res() res: FastifyReply) {
+    const user = await this.authService.signUp(userDto);
+    this.setCookie(res, user.accessToken, user.refreshToken);
+    return res.send(user);
+  }
+
+  private setCookie(
+    res: FastifyReply,
+    accessToken: string,
+    refreshToken: string
+  ) {
+    res.setCookie("accessToken", accessToken, {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+    res.setCookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
   }
 }

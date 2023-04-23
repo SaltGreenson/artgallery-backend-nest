@@ -21,7 +21,7 @@ import {
 import { AuthUserDto } from "./dto/auth-user.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
 import { ValidationPipe } from "../pipes/validation.pipe";
-import { FastifyRequest, FastifyReply } from "fastify";
+import { Request, Response } from "express";
 
 @ApiTags("Auth")
 @Controller("/api/auth")
@@ -30,7 +30,10 @@ export class AuthController {
 
   @SwaggerLogIn()
   @Post("/log-in")
-  async login(@Body() userDto: AuthUserDto, @Res() res: FastifyReply) {
+  async login(
+    @Body() userDto: AuthUserDto,
+    @Res({ passthrough: true }) res: Response
+  ) {
     const user = await this.authService.login(userDto);
     this.setCookie(res, user.accessToken, user.refreshToken);
     return res.send(user);
@@ -39,7 +42,7 @@ export class AuthController {
   @SwaggerLogout()
   @UseGuards(JwtAuthGuard)
   @Delete("/logout")
-  async logout(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+  async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const { refreshToken } = req.cookies;
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
@@ -49,7 +52,10 @@ export class AuthController {
   @SwaggerRefresh()
   @UseGuards(JwtAuthGuard)
   @Put("/refresh")
-  async refresh(@Req() req: FastifyRequest, @Res() res: FastifyReply) {
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
     const { refreshToken } = req.cookies;
     const user = await this.authService.refresh(refreshToken);
     this.setCookie(res, user.accessToken, user.refreshToken);
@@ -59,23 +65,22 @@ export class AuthController {
   @SwaggerSignUp()
   @UsePipes(ValidationPipe)
   @Post("/sign-up")
-  async signUp(@Body() userDto: CreateUserDto, @Res() res: FastifyReply) {
+  async signUp(
+    @Body() userDto: CreateUserDto,
+    @Res({ passthrough: true }) res: Response
+  ) {
     const user = await this.authService.signUp(userDto);
     this.setCookie(res, user.accessToken, user.refreshToken);
     return res.send(user);
   }
 
-  private setCookie(
-    res: FastifyReply,
-    accessToken: string,
-    refreshToken: string
-  ) {
-    res.setCookie("accessToken", accessToken, {
+  private setCookie(res: Response, accessToken: string, refreshToken: string) {
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
     });
-    res.setCookie("refreshToken", refreshToken, {
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000,
       path: "/",

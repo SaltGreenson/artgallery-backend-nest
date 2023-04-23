@@ -78,7 +78,7 @@ export class AuthService {
   }
 
   async generateTokens(user: User): Promise<IUserWithTokens> {
-    const payload = new CreatedUserDto(user);
+    const payload = Object.assign(new CreatedUserDto(user));
 
     const accessToken = this.jwtService.sign(
       { ...payload },

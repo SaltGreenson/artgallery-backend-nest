@@ -10,6 +10,7 @@ import { CreateGalleryDto } from "./dto/create-gallery.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiTags } from "@nestjs/swagger";
 import { SwaggerCreateGallery } from "./swagger.decorator";
+import { Express } from "express";
 
 @ApiTags("Galleries")
 @Controller("/api/galleries")
@@ -19,9 +20,12 @@ export class GalleriesController {
   @SwaggerCreateGallery()
   @Post("/create")
   @UseInterceptors(FileInterceptor("photo[]"))
-  create(@Body() dto: CreateGalleryDto, @UploadedFile() image) {
+  create(
+    @Body() dto: CreateGalleryDto,
+    @UploadedFile() image: Express.Multer.File
+  ) {
     //   TODO: create
-    console.log(image.buffer);
+    console.log(image);
     return;
   }
 }

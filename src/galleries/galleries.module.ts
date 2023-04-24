@@ -5,16 +5,17 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { PhotosModule } from "../photos/photos.module";
 import { Gallery, GallerySchema } from "./gallery.schema";
 import { UsersModule } from "../users/users.module";
-import { JwtService } from "@nestjs/jwt";
 import { VerifyHelper } from "../utils/verify-helper.service";
+import { AuthModule } from "../auth/auth.module";
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Gallery.name, schema: GallerySchema }]),
     PhotosModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [GalleriesController],
-  providers: [GalleriesService, VerifyHelper, JwtService],
+  providers: [GalleriesService, VerifyHelper],
 })
 export class GalleriesModule {}

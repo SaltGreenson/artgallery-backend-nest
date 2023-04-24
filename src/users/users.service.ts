@@ -6,12 +6,14 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { RolesService } from "../roles/roles.service";
 import { AddRoleDto } from "./dto/add-role.dto";
 import { BanUserDto } from "./dto/ban-user.dto";
+import { VerifyHelper } from "../utils/verify-helper.service";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
-    private rolesService: RolesService
+    private rolesService: RolesService,
+    private verifyHelper: VerifyHelper
   ) {}
 
   async create(dto: CreateUserDto): Promise<User> {
@@ -32,8 +34,8 @@ export class UsersService {
 
   async getUserById(_id: string): Promise<User> {
     return this.userModel.findById({ _id }).populate({
-      path: "role",
-      select: "value",
+      path: "likedPosts dislikedPosts",
+      select: "_id",
     });
   }
 
@@ -133,20 +135,18 @@ export class UsersService {
   }
 
   async decrementPostsCount(userId: mongoose.Types.ObjectId): Promise<User> {
-    const user: mongoose.Document<unknown, object, User> &
-      Omit<User & Required<{ _id: mongoose.Types.ObjectId }>, never> =
-      await this.userModel
-        .findOneAndUpdate(
-          { _id: userId },
-          { $inc: { postsCount: -1 } },
-          { new: true }
-        )
-        .select("postsCount likedPosts dislikedPosts")
-        .populate({
-          path: "likedPosts dislikedPosts",
-          select: "_id",
-        })
-        .lean();
+    const user = await this.userModel
+      .findOneAndUpdate(
+        { _id: userId },
+        { $inc: { postsCount: -1 } },
+        { new: true }
+      )
+      .select("postsCount likedPosts dislikedPosts")
+      .populate({
+        path: "likedPosts dislikedPosts",
+        select: "_id",
+      })
+      .lean();
 
     if (!user) {
       throw new HttpException(
@@ -154,10 +154,17 @@ export class UsersService {
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
-    user.$set("likedCount", user.likedPosts.length);
-    user.$set("dislikedCount", user.dislikedPosts.length);
 
-    return user.save();
+    return this.userModel.findOneAndUpdate(
+      { _id: userId },
+      {
+        $set: {
+          likedCount: user.likedPosts.length,
+          dislikedCount: user.dislikedPosts.length,
+        },
+      },
+      { new: true }
+    );
   }
 
   async findAll(
@@ -165,7 +172,28 @@ export class UsersService {
     skip: number,
     limit: number
   ): Promise<User[]> {
-    console.log(searchString, skip, limit);
-    return this.userModel.find().populate("role");
+    return this.userModel
+      .find({
+        name: { $regex: searchString },
+      })
+      .skip(skip)
+      .limit(limit)
+      .populate("role");
+  }
+
+  async getLiked(skip: number, limit: number, authHeader?: string) {
+    const userData = this.verifyHelper.verifyAuthHeader(authHeader);
+
+    return this.userModel
+      .findById({ _id: userData._id })
+      .select("name likedPosts")
+      .populate({
+        path: "likedPosts",
+        populate: {
+          path: "user photo",
+          select: "name compressedUrl originalUrl",
+        },
+        options: { skip: skip ?? 0, limit: limit ?? 10 },
+      });
   }
 }

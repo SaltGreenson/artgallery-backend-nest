@@ -1,8 +1,15 @@
 import { applyDecorators } from "@nestjs/common";
-import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiHeader,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+} from "@nestjs/swagger";
 import { User } from "./user.schema";
 import { AddRoleDto } from "./dto/add-role.dto";
 import { BanUserDto } from "./dto/ban-user.dto";
+import { Gallery } from "../galleries/gallery.schema";
 
 export function SwaggerGetAllUsers() {
   return applyDecorators(
@@ -27,5 +34,15 @@ export function SwaggerBanUser() {
     ApiOperation({ summary: "Ban user" }),
     ApiResponse({ status: 200, type: BanUserDto }),
     ApiBody({ type: BanUserDto })
+  );
+}
+
+export function SwaggerUserLikedPosts() {
+  return applyDecorators(
+    ApiOperation({ summary: "Liked posts" }),
+    ApiResponse({ status: 200, type: [Gallery] }),
+    ApiHeader({ name: "Authorization" }),
+    ApiQuery({ name: "skip", allowEmptyValue: true, required: false }),
+    ApiQuery({ name: "limit", allowEmptyValue: true, required: false })
   );
 }

@@ -138,7 +138,6 @@ export class GalleriesService {
 
   remove = async (id: string, authHeader?: string) => {
     const userData = this.verifyHelper.verifyAuthHeader(authHeader);
-
     const deletedGallery = await this.galleryModel
       .findOneAndDelete({
         _id: id,
@@ -165,7 +164,6 @@ export class GalleriesService {
     authHeader,
   }: GalleryGetOwnArtsType) {
     const userData = this.verifyHelper.verifyAuthHeader(authHeader);
-
     return this.getAll({
       userId: userData._id as unknown as string,
       sortCriteria,

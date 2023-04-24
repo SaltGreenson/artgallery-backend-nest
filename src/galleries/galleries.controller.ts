@@ -39,25 +39,28 @@ export class GalleriesController {
   @SwaggerGetAllGalleries()
   @Get()
   async getAll(
-    @Query() skip = 0,
-    @Query() limit = 10,
-    @Query() isFirstLiked?: string,
-    @Query() userId?: string,
-    @Query() searchString?: string
+    @Query()
+    query: {
+      skip: number;
+      limit: number;
+      isFirstLiked: string;
+      userId: string;
+      searchString: string;
+    }
   ) {
     return this.galleriesService.getAll({
-      skip: skip,
-      limit: limit,
-      userId: userId,
-      sortCriteria: gallerySortCriteriaHelper(isFirstLiked),
-      searchString: searchString,
+      skip: query.skip,
+      limit: query.limit,
+      userId: query.userId,
+      sortCriteria: gallerySortCriteriaHelper(query.isFirstLiked),
+      searchString: query.searchString,
     });
   }
 
   @SwaggerCreateGallery()
   @UseGuards(JwtAuthGuard)
   @Post("/create")
-  @UseInterceptors(FileInterceptor("photo[]"))
+  @UseInterceptors(FileInterceptor("image"))
   create(
     @Req() req: Request & { headers: IncomingHttpHeaders },
     @Body() dto: CreateGalleryDto,
@@ -72,10 +75,10 @@ export class GalleriesController {
   @Delete("/remove")
   remove(
     @Req() req: Request & { headers: IncomingHttpHeaders },
-    @Query() galleryId: string
+    @Query() query: { galleryId: string }
   ) {
     const { authorization } = req.headers;
-    return this.galleriesService.remove(galleryId, authorization);
+    return this.galleriesService.remove(query.galleryId, authorization);
   }
 
   @SwaggerLikeGallery()
@@ -105,31 +108,34 @@ export class GalleriesController {
   @Get("/own")
   own(
     @Req() req: Request & { headers: IncomingHttpHeaders },
-    @Query() skip = 0,
-    @Query() limit = 10,
-    @Query() isFirstLiked?: string,
-    @Query() userId?: string,
-    @Query() searchString?: string
+    @Query()
+    query: {
+      skip: number;
+      limit: number;
+      isFirstLiked: string;
+      userId: string;
+      searchString: string;
+    }
   ) {
     const { authorization } = req.headers;
     return this.galleriesService.getOwnArts({
-      skip,
-      limit,
-      searchString,
-      sortCriteria: gallerySortCriteriaHelper(isFirstLiked),
+      skip: query.skip,
+      limit: query.limit,
+      searchString: query.searchString,
+      sortCriteria: gallerySortCriteriaHelper(query.isFirstLiked),
       authHeader: authorization,
     });
   }
 
   @SwaggerGetGalleryById()
   @Get("/one")
-  one(@Req() req: Request, @Query() galleryId: string) {
-    return this.galleriesService.getById(galleryId);
+  one(@Req() req: Request, @Query() query: { galleryId: string }) {
+    return this.galleriesService.getById(query.galleryId);
   }
 
   @SwaggerGetGalleryById()
   @UseGuards(JwtAuthGuard)
-  @Get("/edit")
+  @Put("/edit")
   edit(
     @Req() req: Request & { headers: IncomingHttpHeaders },
     @Body() dto: EditGalleryDto

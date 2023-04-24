@@ -16,11 +16,11 @@ export class JwtAuthGuard implements CanActivate {
     const req = context.switchToHttp().getRequest();
     try {
       const authHeader = req.headers.authorization;
-
       req.user = this.verificationHelper.verifyAuthHeader(authHeader);
 
       return true;
     } catch (e) {
+      console.log(e);
       throw new UnauthorizedException({ message: "Unauthorized" });
     }
   }
